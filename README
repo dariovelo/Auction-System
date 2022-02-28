@@ -1,0 +1,66 @@
+﻿VELO DARIO, 323CB
+
+
+Proiectul a fost construit pentru un sistem de licitatie in care noua functionalitate este adaugata pentru a sprijini brokerii sa medieze clientii. Functiile din sistemul casei de licitatii includ:
+* Crearea casei de licitatii cu produse, clienti, brokeri si licitatii
+* suporta diverse tipuri de produse, cum ar fi mobilie, bijuterii si tablouri
+* suporta atat persoane fizice, cat si persoane juridice in calitate de clienti
+* abilitatea administratorilor de a adauga produse noi la sistem
+* abilitatea brokerilor de a sterge produsele vandute
+* abilitatea clientilor de a plasa biduri pentru produsele aflate la licitatie
+* abilitatea de a efectua licitatii in casa de licitatii
+* Brokerii devin mediatori si se ocupa de client la comunicarea casei de licitatii
+* Notificari catre brokeri si clienti
+
+
+Elementele esentiale in conformitate cu cerintele proiectului:
+1. Multithreading
+Multithreading-ul este utilizat la trimiterea notificarilor catre brokeri.
+private Executorservice executorservice = Executors.newCachedthreadPool();
+for (Broker broker : brokerList) {
+    executorservice.execute(() -> broker.sendNotification(notification));
+}
+2. Design patterns
+* Builder pattern
+* Factory pattern
+* singleton pattern
+* Mediator pattern (Ne imaginam ca casa de licitatii este acolo si ca exista si un client, dar clientul isi da bidul doar casei de licitatii. Casa de licitatii il transmite la broker, astfel incat brokerul devine persoana intermediara pentru comunicarea care vine de la casa de licitatii. Deci, casa de licitatii nu va comunica niciodata direct cu clientul.)
+
+
+3. Generics (interface Notification de tip generics)
+* interface to represent the notification
+public interface Notification<t> {
+    /**
+     * Method to get the content of the notification.
+     *
+     * @return the content of the notification
+     */
+    t getContent();
+}
+
+
+Pentru a realiza incapsularea in proiect:
+* am declarat variabilele claselor ca fiind private.
+* Metode de setter si getter publice pentru a modifica si vizualiza valorile variabilelor.
+Pentru a realiza mostenirea in proiect:
+* am folosit extends pentru a mosteni proprietatile claselor
+* am folosit super pentru a diferentia membrii superclasei de membrii subclasei, daca au aceleasi nume si pentru a invoca constructorul superclasei din subclasa.
+Pentru a realiza abstractizarea in proiect:
+* am declarat clasa Angajat ca abstracta
+* abstractizare nu inseamna doar utilizarea claselor abstracte. acesta ascunde informatiile inutile si foloseste ceea ce este doar necesar (ex. clasa Casa de licitatii. La ea nu toate campurile sunt expuse, doar ce este utila de folosit)
+Pentru a realiza polimorfism in proiect:
+* Polimorfismul apare atunci cand avem multe clase care sunt legate intre ele prin mostenire (ex. clasa Client cu subclasele Persoana Fizica si Persoana Juridica)
+
+
+Pentru testare am folosit metoda de hardcodare. Am declarat 10 teste diferite si le am apelat in main. Ele pot fi apelate ruland clasa Application una cate una, sau toate dintr-o data.
+
+
+Produsele sunt separate in diferite tipuri. Clasa parinte va fi produs iar subclasele vor fi tablou, Mobila si Bijuterie. Clientul poate fi Persoana fizica sau juridica deci Client este clasa parinte iar cele doua sunt subclasele. angajatii pot fi Broker sau administrators deci clasa angajat va fi cea parinte. Casa de licitatii este cea care face toate functionalitatile. administratorul are un atribut suplimentar adaugaProduseNoiLaCasaDeLicitatii, deci dreptul de a adauga produse noi. Brokerul are o lista de clienti si o metoda speciala implementata, sendnotification. in acest sens, in descrierea proiectului trebuie sa trimitem mesaje catre broker la inceputul licitatiei si in fiecare etapa a brokerului de licitatie trebuie sa trimitem mesaje catre client.
+Deci, avem cateva clase suplimentare. am folosit generics la notificare, iar continutul acestei notificari este intotdeauna un tip de generic. avem 2 tipuri de notificari, una este notificarea brokerului si cealalta este notificarea clientului. atunci cand intram in brokernotification, continutul este brokermessagepayload si atunci cand intram in ea, avem cateva informatii despre id-ul produsului care este vandut, care este lista de clienti de care trebuie sa trimitem mesajul etc. Client id won indica cine castiga produsul la pasul final. avem si o variabila stepnumber de tip integer. La stepnumber, sa consideram ca stepnumber este rezultatul final. apoi acest rezultat este trimis mai departe. aici avem avem doar mesajele pe care le trimitem la notificare. avem, de asemenea, o clasa numita clientnotification care contine clientmessagepayload. Practic, are aceiasi parametri ca prima clasa.
+
+
+Daca rulam primul test, avem auction 1 started and broker 1 spune ca a primit mesajul si ca licitarea numarul 1 poate incepe. Deci noi difuzam ca licitatia a inceput, deoarece in proiect se precizeaza ca casa de licitatii anunta toti brokerii de start. La output avem, de asemenea, mai multi pasi. pasul 1 si 2, iar pasul .. este pasul final. La ultimul pas vedem cine da oferta maxima. Brokerul primeste mesajul ca bidul maxim pentru clientul .. este ...
+Brokerul 2 primeste, de asemenea, mesajul. Odata ce brokerii primesc mesajul, continuam cu clientii. Brokerul 2 trimite mesaje catre clientii 1,2 si .. si acestia primesc mesajul. Ei primesc suma maxima actuala si asa continuam cu aceeasi logica. La output in culoarea verde, o sa avem un anumit client care spune ca a primit mesajul, stie ca e pasul final si ca a castigat licitarea cu produs numar x. am calculat si comisionul: Broker .. is the mediator of the winning client .. of product ..  cu commission of ...
+aici intra rolul lui commissionservice. 
+asa cum deja stim, avem 2 subclase pentru Client: Persoana fizica si juridica care de fapt sunt clienti si in functie de tipul lor, comisionul va fi diferit. in proiect avem categoriile C1, C2, C3 si C4.
+sa ne intoarcem la casa de licitatii deocamdata. Ea contine un commisioncalculator service. acesta este serviciul care va calcula comisionul cu ajutorul unei metode numite getinstance care se afla la clasa CommissionCalculatorserviceimpl si este implementarea de design pattern singleton. Nu are rost sa folosim mai multe commission services, deoarece in intreaga aplicatie avem nevoie de unul singur. in aceasta clasa avem si o alta metoda ‘calculeaza’. Ea primeste clientul castigator (winning client) si bidul maxim (max bid), apoi apeleaza o alta metoda numita getcommisioncategory, care se afla, de asemenea, in aceasta clasa. Daca categoria de comision este o instanta a persoanei fizice si daca acest client a licitat de mai putin de 5 ori, atunci categoria este C1, else C2. Daca categoria de comision este o instanta a persoanei juridice si daca acest client a licitat de mai putin de 25 ori, atunci categoria este C3, else C4. Deci, vom returna acest tip de categorie la metoda calculeaza. stim ca categoria C1 este 20% din valoarea tranzactionata, C2 este 15% si asa mai departe. Pentru fiecare tip vom obtine procentul de comision. daca commissionpercentage este nul (nu se intampla) ar insemna ca nu va fi luat niciun comision. Metoda calculeaza, returneaza comisionul real = maxbid * commisionpercentage. acest rezultat va fi utilizat ulterior in casa de licitatii. La casa de licitatii avem un executor service. acest lucru este folosit ca multithread pentru a trimite mesaje, deoarece putem fi blocati atunci cand trimitem mesaje si pentru a trimite notificari trebuie sa fie folosit ‘paralel’. in afara de listele necesare in cadrul proiectului, am adaugat o alta lista de tip Map numita clientbrokermap care indica ce clienti corespund brokerului si invers. Optiunea collections.synchronisedList la celelalte liste si Concurrenthashmap la tipul nostru Map sunt folosite pentru thread safety (daca mai multe persoane il folosesc, datele nu vor fi corupte). am creat constructorii si am initializat elementele (in cazul nostru fiind in mare parte liste). avem o metoda numita stergeprodusevandute, care este apelata de clasa brokerilor. aceasta metoda elimina produsele vandute. Metoda adaugaproduse adauga un produs nou la lista de produsevandute numai daca produsul nu exista. La metoda placedbid we place a bid :)) . Pentru a place a bid avem nevoie de id-ul licitatiei si de un obiect de tip Bid pe care trebuie sa-l oferim din clasa Bid. stepwisebidamount-ul este explicat ca: imaginati-va ca voi bid 40$. Dar aceasta nu este oferta mea initiala. incep cu 10$, apoi 20$ apoi 40$. Biditerator este un iterator Java si este utilizat in metoda getcurrentbid. in timp ce acest iterator are un element urmator, foloseste-le pe rand. Metoda resetiterator este utilizata in cazul in care dorim sa resetam iteratorul. Clasa de licitare are, de asemenea, o clasa statica Builder folosita pentru a construi bidul, cea mai mare parte a ei apelata in cazurile de testare. this is another design pattern. Cand obtinem un bid la metoda placebid (ne intoarcem la clasa casei de licitatii) cream un obiect Optional. Optional vine din java si inseamna ca atunci cand il declaram, este nul. Metoda ifPresent ne permite sa trecem o functie Consumer care este executata daca exista o valoare in interiorul obiectului Optional. Nu face nimic daca optionalul este gol. in cazul nostru, verificam daca exista o licitatie si daca este plasat un bid. Dupa ce am plasat bidul, verificam daca clientbrokermap are un broker. Daca un client are un broker atribuit anterior, acesta va fi desemnat aici. Daca un client nu are un broker, mergem la metoda selectrandombroker. Exista un range in care cream numerele aleatorii. Dupa ce obtinem acest broker aleatoriu, il vom transmite clientului. Odata ce brokerul este acolo, adauga clientul in acest broker. in acest fel actualizam clientbrokermap. acum avem metoda performLicitare, care este cea mai importanta. obtinem obiectul licitareOptionala. Daca nu este acolo, arunca illegalargumentexception. Daca este, vom obtine ulterior produsul legat de aceasta licitatie. Cream o conditie pentru a ne asigura ca numarul participantilor la licitatie nu depaseste numarul de participanti asteptati. apoi, pentru fiecare broker, trimitem o notificare catre metoda sendstartnotification despre id-ul licitatiei. Odata ce primesc notificarea, incepe licitatia. Pentru fiecare pas primeste bidul de la client. Daca pasii finali nu contin niciun bid, trimite o notificare ca produsul nu a fost vandut. trimite o notificare catre brokeri afirmand ca produsul nu este vandut si reset bids prin metoda notifybrokers. Exact in aceasta metoda, pentru fiecare broker, am facut executia (multithreading) la metoda sendnotification trecand apoi notificarea acolo. Odata ce avem currentstepbids am facut o comparatie intre map-ul si getValue pentru a primi maxbidiniteration. i == maxsteps indica pasul final. Daca nu este pasul final, vom crea un message payload punand toate detaliile si apoi voi trimite notificarea brokerului de catre notifybrokers. apoi, voi actualiza produsul obtinand maxbidValue si declarand ca produsul este vandut.
